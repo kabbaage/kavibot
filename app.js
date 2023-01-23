@@ -8,9 +8,10 @@ import {
   ButtonStyleTypes,
 } from 'discord-interactions';
 
-import { VerifyDiscordRequest, DiscordRequest } from './utils.js';
+import { VerifyDiscordRequest, DiscordRequest, getRandomEmoji, capitalize } from './utils.js';
 import { getShuffledOptions, getResult } from './game.js';
-import { CHALLENGE_COMMAND, HasGuildCommands } from './commands.js';
+import { CHALLENGE_COMMAND, FLOW_COMMAND, HasGuildCommands } from './commands.js';
+import axios from 'axios';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,7 +38,18 @@ app.post('/interactions', async function(req, res) {
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data;
 
-    if (name === 'challenge' && id) {
+    if (name === FLOW_COMMAND.name) {
+      const complimentRes = await axios.get('https://complimentr.com/api');
+      // Send a message into the channel where command was triggered from
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: capitalize(complimentRes.data.compliment.replace('you are', 'Flow is').replace('you have', 'Flow has')) + ' ' + getRandomEmoji(),
+        },
+      });
+    }
+
+    if (name === CHALLENGE_COMMAND.name && id) {
       const userId = req.body.member.user.id;
       const name = req.body.data.options[0].value;
 
@@ -119,6 +131,7 @@ app.listen(PORT, () => {
 
   // Check if guild commands from commands.js are installed (if not, install them)
   HasGuildCommands(process.env.APP_ID, process.env.GUILD_ID, [
+    FLOW_COMMAND,
     CHALLENGE_COMMAND,
   ]);
 });

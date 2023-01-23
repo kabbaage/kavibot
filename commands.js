@@ -43,6 +43,12 @@ function createCommandChoices() {
   }));
 }
 
+export const FLOW_COMMAND = {
+  name: 'flow',
+  description: 'Tell me something about our Queen Flow',
+  type: 1,
+}
+
 export const CHALLENGE_COMMAND = {
   name: 'challenge',
   description: 'Challenge to a match of valorant agent battles',

@@ -9,7 +9,7 @@ const AgentChoices = {
     description: 'Toxic',
     sage: ['covered the  radianite crystals with her snake bite, poisoning'],
     neon: ['created her large chemical cloud, leaving nowhere to run for'],
-    harbor: ['deployed her toxic screen, which poisoned the high tide from'],
+    harbor: ['deployed her toxic screen, which poisoned', '\'s high tide'],
   },
   sage: {
     description: 'Healing Queen',
