@@ -1,0 +1,23 @@
+{
+  "name": "valorant-battles",
+  "version": "0.0.1",
+  "description": "Valorant Agent Battle",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "author": "Kavish",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.2.2",
+    "discord-interactions": "^3.2.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "node-fetch": "^3.2.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
