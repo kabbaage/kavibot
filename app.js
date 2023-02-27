@@ -8,9 +8,9 @@ import {
   ButtonStyleTypes,
 } from 'discord-interactions';
 
-import { VerifyDiscordRequest, DiscordRequest, getRandomEmoji, capitalize } from './utils.js';
+import { VerifyDiscordRequest, DiscordRequest, getRandomEmoji, capitalize, getRandomBoolean } from './utils.js';
 import { getShuffledOptions, getResult } from './game.js';
-import { CHALLENGE_COMMAND, FLOW_COMMAND, HasGuildCommands } from './commands.js';
+import { CHALLENGE_COMMAND, FLOW_COMMAND, TIME_COMMAND, HasGuildCommands } from './commands.js';
 import axios from 'axios';
 
 const app = express();
@@ -40,13 +40,30 @@ app.post('/interactions', async function(req, res) {
 
     if (name === FLOW_COMMAND.name) {
       const complimentRes = await axios.get('https://complimentr.com/api');
+      const compliment = complimentRes.data.compliment;
+      if (compliment.includes("9 out of 10")) {
+        compliment += ". David Tennant agrees too";
+      }
+      const flow = getRandomBoolean();
       // Send a message into the channel where command was triggered from
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: capitalize(complimentRes.data.compliment.replace('you are', 'Flow is').replace('you have', 'Flow has')) + ' ' + getRandomEmoji(),
+          content: capitalize(compliment.replace('you are', flow ? 'Flow is' : 'Kavi is').replace('you have', flow ? 'Flow has' : 'Kavi has')) + ' ' + getRandomEmoji(),
         },
       });
+    }
+
+    if (name === TIME_COMMAND.name) {
+      const dateString = req.body.data.options[0].value;
+      const date = new Date(dateString);
+
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `\\<t:${date.getTime() / 1000}:t>`
+        }
+      })
     }
 
     if (name === CHALLENGE_COMMAND.name && id) {
@@ -133,5 +150,6 @@ app.listen(PORT, () => {
   HasGuildCommands(process.env.APP_ID, process.env.GUILD_ID, [
     FLOW_COMMAND,
     CHALLENGE_COMMAND,
+    TIME_COMMAND,
   ]);
 });

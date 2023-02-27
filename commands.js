@@ -49,13 +49,27 @@ export const FLOW_COMMAND = {
   type: 1,
 }
 
+export const TIME_COMMAND = {
+  name: 'time',
+  description: 'Converts date and time to Discord timestamp',
+  type: 1,
+  options: [
+    {
+      type: 3,
+      name: 'date',
+      description: 'Enter date and time in format MM/dd/YYYY HH:MM TZ',
+      required: true,
+    }
+  ]
+}
+
 export const CHALLENGE_COMMAND = {
   name: 'challenge',
   description: 'Challenge to a match of valorant agent battles',
   options: [
     {
       type: 3,
-      name: 'object',
+      name: 'agent',
       description: 'Choose your Agent',
       required: true,
       choices: createCommandChoices(),
