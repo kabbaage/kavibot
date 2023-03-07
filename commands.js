@@ -57,7 +57,7 @@ export const TIME_COMMAND = {
     {
       type: 3,
       name: 'date',
-      description: 'Enter date and time in format MM/dd/YYYY HH:MM TZ',
+      description: 'Enter one or more comma-separated date and time in format MM/dd/YYYY HH:MM. Or format, Day HH:MM',
       required: true,
     }
   ]

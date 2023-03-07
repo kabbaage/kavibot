@@ -40,6 +40,7 @@ Install ngrok if you haven't already, then start listening on port `3000`:
 
 ```
 ngrok http 3000
+https://valorant-battles.fly.dev
 ```
 
 You should see your connection open:
@@ -65,6 +66,8 @@ Click **Save Changes**, and your app should be ready to run 🚀
 
 ```
 curl -L https://fly.io/install.sh | sh
+export FLYCTL_INSTALL="/home/kavish/.fly"
+export PATH="$FLYCTL_INSTALL/bin:$PATH"
 flyctl auth login
 fly deploy
 ```

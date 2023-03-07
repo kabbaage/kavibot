@@ -8,7 +8,7 @@ import {
   ButtonStyleTypes,
 } from 'discord-interactions';
 
-import { VerifyDiscordRequest, DiscordRequest, getRandomEmoji, capitalize, getRandomBoolean } from './utils.js';
+import { VerifyDiscordRequest, DiscordRequest, getRandomEmoji, capitalize, getRandomBoolean, getDateFromInput, FULL_DAYS } from './utils.js';
 import { getShuffledOptions, getResult } from './game.js';
 import { CHALLENGE_COMMAND, FLOW_COMMAND, TIME_COMMAND, HasGuildCommands } from './commands.js';
 import axios from 'axios';
@@ -40,9 +40,9 @@ app.post('/interactions', async function(req, res) {
 
     if (name === FLOW_COMMAND.name) {
       const complimentRes = await axios.get('https://complimentr.com/api');
-      const compliment = complimentRes.data.compliment;
-      if (compliment.includes("9 out of 10")) {
-        compliment += ". David Tennant agrees too";
+      let compliment = complimentRes.data.compliment;
+      if (compliment.includes('9 out of 10')) {
+        compliment += '. David Tennant agrees too';
       }
       const flow = getRandomBoolean();
       // Send a message into the channel where command was triggered from
@@ -54,15 +54,17 @@ app.post('/interactions', async function(req, res) {
       });
     }
 
+    // /time date:2023/02/08 1:30 pm est
     if (name === TIME_COMMAND.name) {
-      const dateString = req.body.data.options[0].value;
-      const date = new Date(dateString);
+      const dateStrings = req.body.data.options[0].value;
+      const content = dateStrings.split(',').map(dateString => {
+        const date = getDateFromInput(dateString);
+        return !isNaN(date.getTime()) ? `${FULL_DAYS[date.getDay()]}: \\<t:${date.getTime() / 1000}:t>` : 'Invalid Date passed in';
+      }).join('\n');
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: `\\<t:${date.getTime() / 1000}:t>`
-        }
+        data: { content },
       })
     }
 

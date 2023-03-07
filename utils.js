@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import axios from 'axios';
 import { verifyKey } from 'discord-interactions';
+import addDays from 'date-fns/addDays/index.js'
 
 export function VerifyDiscordRequest(clientKey) {
   return function (req, res, buf) {
@@ -41,4 +42,24 @@ export function getRandomEmoji() {
 
 export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const DAYS_INITIALS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+
+export function getDateFromInput(inputDate) {
+  const dateString = inputDate.trim();
+  let date = new Date(dateString);        
+  if (isNaN(date.getTime())) {
+    let dateIndex = -1;
+    DAYS_INITIALS.forEach((day, i) => {
+      if (dateString.toLowerCase().startsWith(day.toLowerCase())) {
+        dateIndex = i;
+      }
+    });
+    const resultDate = addDays(new Date(), dateIndex - new Date().getDay()).toLocaleDateString();
+    date = new Date(resultDate + ' ' + dateString.split(' ').slice(1).join(' '));
+  }
+
+  return date;
 }
