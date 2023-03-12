@@ -59,7 +59,7 @@ app.post('/interactions', async function(req, res) {
       const dateStrings = req.body.data.options[0].value;
       const content = dateStrings.split(',').map(dateString => {
         const date = getDateFromInput(dateString);
-        return !isNaN(date.getTime()) ? `${FULL_DAYS[date.getDay()]}: \\<t:${date.getTime() / 1000}:t>` : 'Invalid Date passed in';
+        return !isNaN(date.getTime()) ? `${FULL_DAYS[date.getDay()]} \\<t:${date.getTime() / 1000}:t>: ` : 'Invalid Date passed in';
       }).join('\n');
 
       return res.send({

@@ -48,8 +48,19 @@ export const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'
 export const DAYS_INITIALS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 
 export function getDateFromInput(inputDate) {
-  const dateString = inputDate.trim();
-  let date = new Date(dateString);        
+  let dateString = inputDate.trim();
+  if (dateString[dateString.length - 1].toLowerCase() !== 't') {
+    dateString += ' edt';
+  }
+  if (dateString.match(/\s\d+\s*[a|p]m/)) {
+    dateString = dateString.replace(/\s*pm/, ':00 pm');
+    dateString = dateString.replace(/\s*am/, ':00 am');
+  }
+  if (dateString.match(/\d[a|p]m/)) {
+    dateString = dateString.replace('pm', ' pm');
+    dateString = dateString.replace('am', ' am');
+  }
+  let date = new Date(dateString);
   if (isNaN(date.getTime())) {
     let dateIndex = -1;
     DAYS_INITIALS.forEach((day, i) => {
