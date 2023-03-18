@@ -44,6 +44,27 @@ export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+export async function getCompliment() {
+  const complimentRes = await axios.get('https://complimentr.com/api');
+  let compliment = complimentRes.data.compliment;
+  const flow = getRandomBoolean();
+  compliment = capitalize(compliment.replace('you are', flow ? 'Flow is' : 'Kavi is').replace('you have', flow ? 'Flow has' : 'Kavi has'))
+  if (compliment.includes('Flow has')) {
+    const nonBodyParts = ['heart', 'mind', 'personality', 'radiance', 'ideas', 'thoughts', 'strengths', 'brain'];
+    const bodyPartInCompliment = nonBodyParts.filter(t => compliment.includes(t)).length === 0;
+    if (bodyPartInCompliment) {
+      const complimentWords = compliment.split(' ');
+      complimentWords[complimentWords.length - 1] = `~~${complimentWords[complimentWords.length - 1]}~~ ${nonBodyParts[Math.floor(Math.random() * 4)]}`;
+      compliment = complimentWords.join(' ');
+    }
+  }
+  if (compliment.includes('9 out of 10')) {
+    compliment += '. David Tennant agrees with them';
+  }
+
+  return compliment;
+}
+
 export const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 export const DAYS_INITIALS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 

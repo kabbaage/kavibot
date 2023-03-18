@@ -8,10 +8,9 @@ import {
   ButtonStyleTypes,
 } from 'discord-interactions';
 
-import { VerifyDiscordRequest, DiscordRequest, getRandomEmoji, capitalize, getRandomBoolean, getDateFromInput, FULL_DAYS } from './utils.js';
+import { VerifyDiscordRequest, DiscordRequest, getRandomEmoji, getDateFromInput, FULL_DAYS, getCompliment } from './utils.js';
 import { getShuffledOptions, getResult } from './game.js';
 import { CHALLENGE_COMMAND, FLOW_COMMAND, TIME_COMMAND, HasGuildCommands } from './commands.js';
-import axios from 'axios';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,17 +38,11 @@ app.post('/interactions', async function(req, res) {
     const { name } = data;
 
     if (name === FLOW_COMMAND.name) {
-      const complimentRes = await axios.get('https://complimentr.com/api');
-      let compliment = complimentRes.data.compliment;
-      if (compliment.includes('9 out of 10')) {
-        compliment += '. David Tennant agrees too';
-      }
-      const flow = getRandomBoolean();
       // Send a message into the channel where command was triggered from
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: capitalize(compliment.replace('you are', flow ? 'Flow is' : 'Kavi is').replace('you have', flow ? 'Flow has' : 'Kavi has')) + ' ' + getRandomEmoji(),
+          content: (await getCompliment()) + ' ' + getRandomEmoji(),
         },
       });
     }
