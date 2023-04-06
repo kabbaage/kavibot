@@ -8,19 +8,19 @@ export function getResult(agent1, agent2) {
       winner: agent1,
       loser: agent2,
       tie: true,
-      verbs: ['tie']
+      agentResult: ['tie']
     }
   } else if (getRandomBoolean()) {
     result = {
       winner: agent1,
       loser: agent2,
-      verbs: AgentChoices[agent1.name][agent2.name],
+      agentResult: AgentChoices[agent1.name][agent2.name],
     }
   } else {
     result = {
       winner: agent2,
       loser: agent1,
-      verbs: AgentChoices[agent2.name][agent1.name],
+      agentResult: AgentChoices[agent2.name][agent1.name],
     }
   }
 
@@ -28,18 +28,17 @@ export function getResult(agent1, agent2) {
 };
 
 function formatResult(result) {
-  const { winner, loser, verbs, tie } = result;
+  const { winner, loser, agentResult, tie } = result;
 
-  let resultLine = `**${capitalize(winner.name)}** beats **${capitalize(loser.name)}**. <@${winner.id}> wins`;
+  let resultLine = `**${capitalize(winner.name)}** beats **${capitalize(loser.name)}**. <@${winner.id}> beats <@${loser.id}>`;
   if (tie) {
     resultLine = `<@${winner.id}> and <@${loser.id}> draw with **${capitalize(winner.name)}**`;
+  } else if (agentResult) {
+    resultLine = `${agentResult}. <@${winner.id}> beats <@${loser.id}>`;
   }
-  if (verbs && verbs.length) {
-    resultLine = `**${capitalize(winner.name)}** ${verbs[0]} **${capitalize(loser.name)}**${verbs[1] ? verbs[1] : ''}. <@${winner.id}> wins`;
-  }
-  if (winner.name.toLowerCase() === 'raze' && loser.name.toLowerCase() === 'killjoy'
-    || loser.name.toLowerCase() === 'raze' && winner.name.toLowerCase() === 'killjoy') {
-    resultLine = `**${capitalize(winner.name)}** ${verbs[0]} **${capitalize(loser.name)}**${verbs[1]}. As should <@${winner.id}> and <@${loser.id}>`;
+  if (winner.name.toLowerCase() === 'raze' && (loser.name.toLowerCase() === 'killjoy' || loser.name.toLowerCase() === 'gekko')
+    || loser.name.toLowerCase() === 'raze' && (winner.name.toLowerCase() === 'killjoy' || winner.name.toLowerCase() === 'gekko')) {
+    resultLine = `${agentResult}. As should <@${winner.id}> and <@${loser.id}>`;
   }
 
   return resultLine;

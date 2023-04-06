@@ -1,3 +1,4 @@
+import util from 'util';
 import { getAgentChoices } from './game.js';
 import { capitalize, DiscordRequest } from './utils.js';
 
@@ -8,6 +9,7 @@ export async function HasGuildCommands(appId, guildId, commands) {
 }
 
 async function HasGuildCommand(appId, guildId, command) {
+  console.log(`Installing "${command.name}"`);
   // API endpoint to get and post guild commands
   const endpoint = `applications/${appId}/guilds/${guildId}/commands`;
 
@@ -16,12 +18,11 @@ async function HasGuildCommand(appId, guildId, command) {
     const data = await res.data;
 
     if (data) {
-      console.log(`Installing "${command.name}"`);
       InstallGuildCommand(appId, guildId, command);
       console.log(`Installed "${command.name}"`);
     }
   } catch (err) {
-    console.error(err.response.data.message);
+    console.error(util.inspect(err.response.data, {showHidden: false, depth: null, colors: true}))
   }
 }
 
@@ -31,7 +32,7 @@ export async function InstallGuildCommand(appId, guildId, command) {
   try {
     await DiscordRequest(endpoint, { method: 'POST', data: command });
   } catch (err) {
-    console.error(err.response.data.message);
+    console.error(util.inspect(err.response.data, {showHidden: false, depth: null, colors: true}))
   }
 }
 
@@ -73,6 +74,11 @@ export const CHALLENGE_COMMAND = {
       description: 'Choose your Agent',
       required: true,
       choices: createCommandChoices(),
+    },
+    {
+      type: 6,
+      name: 'target',
+      description: 'User to challange',
     },
   ],
   type: 1,

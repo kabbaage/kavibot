@@ -50,10 +50,11 @@ app.post('/interactions', async function(req, res) {
     // /time date:2023/02/08 1:30 pm est
     if (name === TIME_COMMAND.name) {
       const dateStrings = req.body.data.options[0].value;
-      const content = dateStrings.split(',').map(dateString => {
+      let content = dateStrings.split(',').map(dateString => {
         const date = getDateFromInput(dateString);
         return !isNaN(date.getTime()) ? `${FULL_DAYS[date.getDay()]} \\<t:${date.getTime() / 1000}:t>: ` : 'Invalid Date passed in';
       }).join('\n');
+      content += "\n*times automatically converted to your time zone*\n";
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -64,20 +65,25 @@ app.post('/interactions', async function(req, res) {
     if (name === CHALLENGE_COMMAND.name && id) {
       const userId = req.body.member.user.id;
       const name = req.body.data.options[0].value;
+      const targetId = req.body.data.options[1] ? req.body.data.options[1].value : 'undefined';
+      let content = `Valorant agent battle challenge from <@${userId}>`;
+      if (targetId !== 'undefined') {
+        content = `<@${targetId}>. <@${userId}> has challanged you to a Valorant agent battle`
+      }
 
       activeGames[id] = { id: userId, name };
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `Valorant agent battle challenge from <@${userId}>`,
+          content,
           components: [
             {
               type: MessageComponentTypes.ACTION_ROW,
               components: [
                 {
                   type: MessageComponentTypes.BUTTON,
-                  custom_id: `accept_button_${req.body.id}`,
+                  custom_id: `accept_button_${req.body.id}_target_${targetId}`,
                   label: 'Accept',
                   style: ButtonStyleTypes.PRIMARY,
                 },
@@ -93,30 +99,42 @@ app.post('/interactions', async function(req, res) {
    * Handle interative component requests
    */
   if (type === InteractionType.MESSAGE_COMPONENT) {
+    const userId = req.body.member.user.id;
     const componentId = data.custom_id;
     let responseData;
+    let deleteOriginal;
     if (componentId.startsWith('accept_button_')) {
-      const gameId = componentId.replace('accept_button_', '');
-      responseData = {
-        content: 'What is your Agent of choice?',
-        flags: InteractionResponseFlags.EPHEMERAL,
-        components: [
-          {
-            type: MessageComponentTypes.ACTION_ROW,
-            components: [
-              {
-                type: MessageComponentTypes.STRING_SELECT,
-                custom_id: `select_choice_${gameId}`,
-                options: getShuffledOptions(),
-              },
-            ],
-          },
-        ],
-      };
+      const ids = componentId.split('_target_');
+      const gameId = ids[0].replace('accept_button_', '');
+      const targetId = ids[1];
+      if (targetId != 'undefined' && targetId != userId) {
+        responseData = {
+          content: 'You are not the target for this challange',
+          flags: InteractionResponseFlags.EPHEMERAL,
+        };
+      } else {
+        deleteOriginal = true;
+        responseData = {
+          content: 'What is your Agent of choice?',
+          flags: InteractionResponseFlags.EPHEMERAL,
+          components: [
+            {
+              type: MessageComponentTypes.ACTION_ROW,
+              components: [
+                {
+                  type: MessageComponentTypes.STRING_SELECT,
+                  custom_id: `select_choice_${gameId}`,
+                  options: getShuffledOptions(),
+                },
+              ],
+            },
+          ],
+        };
+      }
     } else if (componentId.startsWith('select_choice_')) {
+      deleteOriginal = true;
       const gameId = componentId.replace('select_choice_', '');
       if (activeGames[gameId]) {
-        const userId = req.body.member.user.id;
         const name = data.values[0];
         const result = getResult(activeGames[gameId], { id: userId, name });
         delete activeGames[gameId];
@@ -131,7 +149,7 @@ app.post('/interactions', async function(req, res) {
       });
 
       const endpoint = `webhooks/${process.env.APP_ID}/${req.body.token}/messages/${req.body.message.id}`;
-      await DiscordRequest(endpoint, { method: 'DELETE' });
+      if (deleteOriginal) await DiscordRequest(endpoint, { method: 'DELETE' });
     } catch (err) {
       console.error('Error sending message:', err.response.data.message);
     }
@@ -143,8 +161,8 @@ app.listen(PORT, () => {
 
   // Check if guild commands from commands.js are installed (if not, install them)
   HasGuildCommands(process.env.APP_ID, process.env.GUILD_ID, [
-    FLOW_COMMAND,
+    // FLOW_COMMAND,
     CHALLENGE_COMMAND,
-    TIME_COMMAND,
+    // TIME_COMMAND,
   ]);
 });
