@@ -58,9 +58,14 @@ export const TIME_COMMAND = {
     {
       type: 3,
       name: 'date',
-      description: 'Enter one or more comma-separated date and time in format MM/dd/YYYY HH:MM. Or format, Day HH:MM',
+      description: 'One or more comma-separated dates in format MM/dd/YYYY HH:MM Or Day HH:MM, and game',
       required: true,
-    }
+    },
+    {
+      type: 3,
+      name: 'timezone',
+      description: 'Timezone (optional)',
+    },
   ]
 }
 

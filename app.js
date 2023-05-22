@@ -50,10 +50,8 @@ app.post('/interactions', async function(req, res) {
     // /time date:2023/02/08 1:30 pm est
     if (name === TIME_COMMAND.name) {
       const dateStrings = req.body.data.options[0].value;
-      let content = dateStrings.split(',').map(dateString => {
-        const date = getDateFromInput(dateString);
-        return !isNaN(date.getTime()) ? `${FULL_DAYS[date.getDay()]} \\<t:${date.getTime() / 1000}:t>: ` : 'Invalid Date passed in';
-      }).join('\n');
+      const timezone = req.body.data.options[1] ? req.body.data.options[1].value : null;
+      let content = dateStrings.split(',').map(dateString => getDateFromInput(dateString, timezone)).join('\n');
       content += "\n*times automatically converted to your time zone*\n";
 
       return res.send({
@@ -161,8 +159,8 @@ app.listen(PORT, () => {
 
   // Check if guild commands from commands.js are installed (if not, install them)
   HasGuildCommands(process.env.APP_ID, process.env.GUILD_ID, [
-    // FLOW_COMMAND,
+    FLOW_COMMAND,
     CHALLENGE_COMMAND,
-    // TIME_COMMAND,
+    TIME_COMMAND,
   ]);
 });

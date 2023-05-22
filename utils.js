@@ -68,11 +68,10 @@ export async function getCompliment() {
 export const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 export const DAYS_INITIALS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 
-export function getDateFromInput(inputDate) {
-  let dateString = inputDate.trim();
-  if (dateString[dateString.length - 1].toLowerCase() !== 't') {
-    dateString += ' edt';
-  }
+export function getDateFromInput(input, timezone) {
+  let dateString = input.trim();
+  dateString = dateString.replace('PM', 'pm');
+  dateString = dateString.replace('AM', 'am');
   if (dateString.match(/\s\d+\s*[a|p]m/)) {
     dateString = dateString.replace(/\s*pm/, ':00 pm');
     dateString = dateString.replace(/\s*am/, ':00 am');
@@ -81,6 +80,11 @@ export function getDateFromInput(inputDate) {
     dateString = dateString.replace('pm', ' pm');
     dateString = dateString.replace('am', ' am');
   }
+  let timeEndIndex = dateString.indexOf(' am') === -1 ? dateString.indexOf(' pm') : dateString.indexOf(' am')
+  timeEndIndex += 3;
+  const game = timeEndIndex >= dateString.length ? '' : dateString.substring(timeEndIndex).trim();
+  dateString = dateString.substring(0, timeEndIndex).trim();
+  dateString += timezone ? ` ${timezone}` : ' edt';
   let date = new Date(dateString);
   if (isNaN(date.getTime())) {
     let dateIndex = -1;
@@ -93,5 +97,5 @@ export function getDateFromInput(inputDate) {
     date = new Date(resultDate + ' ' + dateString.split(' ').slice(1).join(' '));
   }
 
-  return date;
+  return !isNaN(date.getTime()) ? `${FULL_DAYS[date.getHours() > 4 ? date.getDay() : date.getDay() - 1]} \\<t:${date.getTime() / 1000}:t>: ${game}` : 'Invalid Date passed in';
 }
