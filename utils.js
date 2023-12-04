@@ -45,10 +45,20 @@ export function capitalize(str) {
 }
 
 export async function getCompliment() {
-  const complimentRes = await axios.get('https://complimentr.com/api');
-  let compliment = complimentRes.data.compliment;
+  const complimentRes = await axios.get('https://8768zwfurd.execute-api.us-east-1.amazonaws.com/v1/compliments');
+  let compliment = complimentRes.data.toLowerCase();
   const flow = getRandomBoolean();
-  compliment = capitalize(compliment.replace('you are', flow ? 'Flow is' : 'Kavi is').replace('you have', flow ? 'Flow has' : 'Kavi has'))
+  compliment = capitalize(
+    compliment
+      .replace('you are', flow ? 'Flow is' : 'Kavi is')
+      .replace('you\'re', flow ? 'Flow is' : 'Kavi is')
+      .replace('you were', flow ? 'Flow was' : 'Kavi was')
+      .replace('you have', flow ? 'Flow has' : 'Kavi has')
+      .replace('your', flow ? 'Flow\'s' : 'Kavi\'s')
+  );
+  if (compliment.startsWith('you')) {
+    compliment = compliment.replace('you', flow ? 'Flow, you' : 'Kavi, you')
+  }
   // if (compliment.includes('Flow has')) {
   //   const nonBodyParts = ['heart', 'mind', 'personality', 'radiance', 'ideas', 'thoughts', 'strengths', 'brain'];
   //   const bodyPartInCompliment = nonBodyParts.filter(t => compliment.includes(t)).length === 0;
@@ -84,7 +94,7 @@ export function getDateFromInput(input, timezone) {
   timeEndIndex += 3;
   const game = timeEndIndex >= dateString.length ? '' : dateString.substring(timeEndIndex).trim();
   dateString = dateString.substring(0, timeEndIndex).trim();
-  dateString += timezone ? ` ${timezone}` : ' edt';
+  dateString += timezone ? ` ${timezone}` : ' est';
   let date = new Date(dateString);
   if (isNaN(date.getTime())) {
     let dateIndex = -1;
