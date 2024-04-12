@@ -94,7 +94,8 @@ export function getDateFromInput(input, timezone) {
   timeEndIndex += 3;
   const game = timeEndIndex >= dateString.length ? '' : dateString.substring(timeEndIndex).trim();
   dateString = dateString.substring(0, timeEndIndex).trim();
-  dateString += timezone ? ` ${timezone}` : ' est';
+  const curMonth = (new Date()).getMonth() + 1;
+  dateString += timezone ? ` ${timezone}` : (curMonth >= 4 && curMonth <= 11 ? ' edt' : ' est');
   let date = new Date(dateString);
   if (isNaN(date.getTime())) {
     let dateIndex = -1;
