@@ -78,7 +78,7 @@ export async function getCompliment() {
 export const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 export const DAYS_INITIALS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 
-export function getDateFromInput(input, timezone) {
+export function getDateFromInput(input, timezone, userId) {
   let dateString = input.trim();
   dateString = dateString.replace('PM', 'pm');
   dateString = dateString.replace('AM', 'am');
@@ -95,7 +95,11 @@ export function getDateFromInput(input, timezone) {
   const game = timeEndIndex >= dateString.length ? '' : dateString.substring(timeEndIndex).trim();
   dateString = dateString.substring(0, timeEndIndex).trim();
   const curMonth = (new Date()).getMonth() + 1;
-  dateString += timezone ? ` ${timezone}` : (curMonth >= 4 && curMonth <= 11 ? ' edt' : ' est');
+  let defaultTz = (curMonth >= 4 && curMonth <= 11 ? ' edt' : ' est')
+  if (userId == '467323668507131904' || userId == '694510056217247795') {
+    defaultTz = (curMonth >= 4 && curMonth <= 11 ? ' cdt' : ' cst')
+  }
+  dateString += timezone ? ` ${timezone}` : defaultTz;
   let date = new Date(dateString);
   if (isNaN(date.getTime())) {
     let dateIndex = -1;

@@ -51,8 +51,10 @@ app.post('/interactions', async function(req, res) {
     if (name === TIME_COMMAND.name) {
       const dateStrings = req.body.data.options[0].value;
       const timezone = req.body.data.options[1] ? req.body.data.options[1].value : null;
-      let content = dateStrings.split(',').map(dateString => getDateFromInput(dateString, timezone)).join('\n');
-      content += "\n*times automatically converted to your time zone*\n";
+      let content = dateStrings.split(',').map(dateString => getDateFromInput(dateString, timezone, req.body.member.user.id)).join('\n');
+      if (req.body.member.user.id != '467323668507131904') {
+        content += "\n*times automatically converted to your time zone*\n";
+      }
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
