@@ -20,6 +20,7 @@ app.use(express.json({ verify: VerifyDiscordRequest(process.env.PUBLIC_KEY) }));
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 const activeGames = {};
+const foundSteamLinks = {};
 
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
@@ -45,7 +46,7 @@ app.post('/interactions', async function(req, res) {
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: 'local: ' + (await getCompliment()) + ' ' + getRandomEmoji(),
+          content: (await getCompliment()) + ' ' + getRandomEmoji(),
         },
       });
     }
@@ -76,7 +77,7 @@ app.post('/interactions', async function(req, res) {
             fetchedMessages = await channel.messages.fetch({ limit: 100, before: lastMessageId });
             messages.push(...fetchedMessages.values());
             lastMessageId = fetchedMessages.last()?.id;
-          } while (fetchedMessages.size > 0 && messages.length <= 200);
+          } while (fetchedMessages.size > 0 && (!foundSteamLinks[channel_id] || foundSteamLinks[channel_id].size === 0 || messages.length <= 200));
         } catch (error) {
           console.error('Error fetching messages:', error);
         }
@@ -96,13 +97,21 @@ app.post('/interactions', async function(req, res) {
         }
       });
 
+      if (!foundSteamLinks[channel_id]) {
+        foundSteamLinks[channel_id] = new Set();
+      }
+      steamLinks.forEach(link => {
+        foundSteamLinks[channel_id].add(link);
+      })
+      const allSteamLinks = Array.from(foundSteamLinks[channel_id]);
+
       console.log(`Fetched ${messages.length} messages`);
-      console.log(`Filtered ${steamLinks.length} Steam links`);
+      console.log(`Filtered ${steamLinks.length} Steam links. New total: ${allSteamLinks.length}`);
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: steamLinks.length > 0 ? steamLinks[Math.floor(Math.random() * steamLinks.length)] : "No Steam games found",
+          content: allSteamLinks.length > 0 ? allSteamLinks[Math.floor(Math.random() * allSteamLinks.length)] : "No Steam games found",
         },
       });
     }
@@ -238,9 +247,9 @@ app.listen(PORT, () => {
 
   // Check if guild commands from commands.js are installed (if not, install them)
   HasGuildCommands(process.env.APP_ID, process.env.GUILD_ID, [
-    // FLOW_COMMAND,
-    // CHALLENGE_COMMAND,
-    // TIME_COMMAND,
+    FLOW_COMMAND,
+    CHALLENGE_COMMAND,
+    TIME_COMMAND,
     // WEEKLY_COMMAND,
     GAME_COMMAND,
   ]);
