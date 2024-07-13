@@ -1,4 +1,4 @@
-# valorant-battles
+# kavibot
 
 ## Running app locally
 
@@ -11,7 +11,7 @@ Configuring the app is covered in detail in the [getting started guide](https://
 
 Then navigate to its directory and install dependencies:
 ```
-cd valorant-battles
+cd kavibot
 npm install
 ```
 ### Get app credentials

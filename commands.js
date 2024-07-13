@@ -50,9 +50,34 @@ export const FLOW_COMMAND = {
   type: 1,
 }
 
+export const GAME_COMMAND = {
+  name: 'game',
+  description: 'Select a random Steam game from this channel\'s recent messages',
+  type: 1,
+}
+
 export const TIME_COMMAND = {
   name: 'time',
   description: 'Converts date and time to Discord timestamp',
+  type: 1,
+  options: [
+    {
+      type: 3,
+      name: 'date',
+      description: 'One or more comma-separated dates in format MM/dd/YYYY HH:MM Or Day HH:MM, and game',
+      required: true,
+    },
+    {
+      type: 3,
+      name: 'timezone',
+      description: 'Timezone (optional)',
+    },
+  ]
+}
+
+export const WEEKLY_COMMAND = {
+  name: 'week',
+  description: 'Weekly Schedule using Discord timestamps',
   type: 1,
   options: [
     {

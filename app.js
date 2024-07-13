@@ -7,14 +7,17 @@ import {
   MessageComponentTypes,
   ButtonStyleTypes,
 } from 'discord-interactions';
+import { Client, GatewayIntentBits } from 'discord.js';
 
 import { VerifyDiscordRequest, DiscordRequest, getRandomEmoji, getDateFromInput, FULL_DAYS, getCompliment } from './utils.js';
 import { getShuffledOptions, getResult } from './game.js';
-import { CHALLENGE_COMMAND, FLOW_COMMAND, TIME_COMMAND, HasGuildCommands } from './commands.js';
+import { CHALLENGE_COMMAND, FLOW_COMMAND, TIME_COMMAND, WEEKLY_COMMAND, GAME_COMMAND, HasGuildCommands } from './commands.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.json({ verify: VerifyDiscordRequest(process.env.PUBLIC_KEY) }));
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 const activeGames = {};
 
@@ -22,7 +25,7 @@ const activeGames = {};
  * Interactions endpoint URL where Discord will send HTTP requests
  */
 app.post('/interactions', async function(req, res) {
-  const { type, id, data } = req.body;
+  const { type, id, data, guild_id, channel_id } = req.body;
 
   /**
    * Handle verification requests
@@ -42,19 +45,91 @@ app.post('/interactions', async function(req, res) {
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: (await getCompliment()) + ' ' + getRandomEmoji(),
+          content: 'local: ' + (await getCompliment()) + ' ' + getRandomEmoji(),
+        },
+      });
+    }
+
+    if (name === GAME_COMMAND.name) {
+      console.log(channel_id);
+      // const channel = client.channels.cache.get(channel_id);
+      let channel;
+      if (client.channels.cache.has(channel_id)) {
+        console.log('Cached channel');
+        channel = client.channels.cache.get(channel_id);
+      } else {
+        try {
+          console.log('Fetching channel');
+          channel = await client.channels.fetch(channel_id);
+        } catch (error) {
+          console.error('Error fetching channel:', error);
+        }
+      }
+
+      let fetchedMessages = {size: 0};
+      let messages = [];
+      let lastMessageId;
+      if (!channel.messages.cache || channel.messages.cache.size === 0) {
+        try {
+          console.log('Fetching messages');
+          do {
+            fetchedMessages = await channel.messages.fetch({ limit: 100, before: lastMessageId });
+            messages.push(...fetchedMessages.values());
+            lastMessageId = fetchedMessages.last()?.id;
+          } while (fetchedMessages.size > 0 && messages.length <= 200);
+        } catch (error) {
+          console.error('Error fetching messages:', error);
+        }
+      } else {
+        console.log('Cached messages: ' + channel.messages.cache.size);
+        messages = channel.messages.cache.values();
+        messages.length = channel.messages.cache.size;
+      }
+
+      // Filter for Steam game links
+      const steamLinkRegex = /https?:\/\/store\.steampowered\.com\/app\/\d+(\/?[\w-]*\/?)/g;
+      let steamLinks = [];
+      messages.filter(msg => msg.author.id !== '1060455432843448360').forEach(msg => {
+        const links = msg.content.match(steamLinkRegex);
+        if (links) {
+          steamLinks.push(...links);
+        }
+      });
+
+      console.log(`Fetched ${messages.length} messages`);
+      console.log(`Filtered ${steamLinks.length} Steam links`);
+
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: steamLinks.length > 0 ? steamLinks[Math.floor(Math.random() * steamLinks.length)] : "No Steam games found",
         },
       });
     }
 
     // /time date:2023/02/08 1:30 pm est
     if (name === TIME_COMMAND.name) {
-      const dateStrings = req.body.data.options[0].value;
-      const timezone = req.body.data.options[1] ? req.body.data.options[1].value : null;
+      console.log(data);
+      const dateStrings = data.options[0].value;
+      const timezone = data.options[1] ? data.options[1].value : null;
       let content = dateStrings.split(',').map(dateString => getDateFromInput(dateString, timezone, req.body.member.user.id)).join('\n');
       if (req.body.member.user.id != '467323668507131904') {
-        content += "\n*times automatically converted to your time zone*\n";
+        content += "\n\\*times automatically converted to your time zone\\*\n";
       }
+
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: { content },
+      })
+    }
+
+    // /time date:2023/02/08 1:30 pm est
+    if (name === WEEKLY_COMMAND.name) {
+      const dateStrings = data.options[0].value;
+      const timezone = data.options[1] ? data.options[1].value : null;
+      let content = "\\# :xflowmTeeHee: Weekly Schedule :xflowmSip:"
+      content += "\n\\*This schedule will include all stream times, podcast releases, and Discord events going on for the week and will be updated on Sundays. Keep in mind all times are subject to change (assume +/- 30 ish mins due to my fashionably late nature). All times appear in the timezone you use on your device.\\*\n\n:BeeBounce:\n\n";
+      content += dateStrings.split(',').map(dateString => getDateFromInput(dateString, timezone, req.body.member.user.id)).join('\n');
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -64,8 +139,8 @@ app.post('/interactions', async function(req, res) {
 
     if (name === CHALLENGE_COMMAND.name && id) {
       const userId = req.body.member.user.id;
-      const name = req.body.data.options[0].value;
-      const targetId = req.body.data.options[1] ? req.body.data.options[1].value : 'undefined';
+      const name = data.options[0].value;
+      const targetId = data.options[1] ? data.options[1].value : 'undefined';
       let content = `Valorant agent battle challenge from <@${userId}>`;
       if (targetId !== 'undefined') {
         content = `<@${targetId}>. <@${userId}> has challanged you to a Valorant agent battle`
@@ -156,13 +231,17 @@ app.post('/interactions', async function(req, res) {
   }
 });
 
+client.login(process.env.DISCORD_TOKEN);
+
 app.listen(PORT, () => {
   console.log('Listening on port', PORT);
 
   // Check if guild commands from commands.js are installed (if not, install them)
   HasGuildCommands(process.env.APP_ID, process.env.GUILD_ID, [
-    FLOW_COMMAND,
-    CHALLENGE_COMMAND,
-    TIME_COMMAND,
+    // FLOW_COMMAND,
+    // CHALLENGE_COMMAND,
+    // TIME_COMMAND,
+    // WEEKLY_COMMAND,
+    GAME_COMMAND,
   ]);
 });
